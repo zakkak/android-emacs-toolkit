@@ -4,15 +4,16 @@
 #
 echo "Init enviroment for Android NDK and SDK"
 if [ "$#" != "3" ]; then
-    echo "Usage: init.sh ndkscriptpath androidndkpath androidsdkpath" 
+    echo "Usage: init.sh ndkscriptpath androidndkpath androidsdkpath"
 else
-	# ndk script path
+    # ndk script path
     export NDKSCRIPTPATH=$1
 
     # init NDK path
     export NDK=$2
+    export ANDROID_NDK_ROOT=$2
 
-	# init SDK path
+    # init SDK path
     export ANDROID_SDK=$3
 
     # add some path to PATH

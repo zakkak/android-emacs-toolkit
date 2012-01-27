@@ -1,4 +1,12 @@
+2012-01-27  zxy  <gcoordinate@gmail.com>
+
+	* androidmk-mode.el: Test on windows7.
+
+2012-01-24  zxy  <gcoordinate@gmail.com>
+
+	* androidmk-mode.el (android-new-project): Add new project function.
+
 2011-11-14  zxy  <gcoordinate@gmail.com>
 
-	* Move project to git
+	* Move project to git.
 

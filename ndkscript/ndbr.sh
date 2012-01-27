@@ -3,9 +3,9 @@
 # Please cd to the NDK root folder
 #
 if [ "$1" != "r" ]; then
-    echo "Building with NDK..." 
+    echo "Building with NDK..."
 else
-    echo 'Rebuilding the NDK...'    
+    echo 'Rebuilding the NDK...'
     $NDK/ndk-build clean
 fi
 $NDK/ndk-build
@@ -20,6 +20,6 @@ if [ "$#" == "2" ]; then
     fi
 
     DESTINATION=$2/libs # 'F:/workspace/test01/libs'
-    echo "[Copy file form $SOURSE to $DESTINATION]" 
+    echo "[Copy file form $SOURSE to $DESTINATION]"
     cp -R $SOURSE $DESTINATION
 fi
