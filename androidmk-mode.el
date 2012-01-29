@@ -49,6 +49,11 @@
       (kill-buffer "*android-temp*"))
   (shell "*android-temp*"))
 
+(defun android-build-buffer ()
+  (if (not (eq nil (get-buffer "*android-build*")))
+      (kill-buffer "*android-build*"))
+  (shell "*android-build*"))
+
 (defun android-string-android ()
   (if (eq system-type 'windows-nt)
       (concat "'"sdk-root-path"/tools/android.bat'")
@@ -99,8 +104,7 @@
   "init shell command, you have to run once"
   (interactive)
   (android-temp-buffer)
-  (comint-send-string (current-buffer) (concat "sudo \n"))
-  (comint-send-string (current-buffer) (concat "sudo chmod +x "ndk-root-path"/ndk-build.sh\n"))
+  (comint-send-string (current-buffer) (concat "sudo chmod +x "ndk-root-path"/ndk-build\n"))
   (comint-send-string (current-buffer) (concat "sudo chmod +x "ndk-script-path"/adr.sh\n"))
   (comint-send-string (current-buffer) (concat "sudo chmod +x "ndk-script-path"/api.sh\n"))
   (comint-send-string (current-buffer) (concat "sudo chmod +x "ndk-script-path"/apu.sh\n"))
@@ -182,7 +186,7 @@
   ;; create avd
   (let ((avdName (read-string "[android] Name (default AVD): " nil nil "AVD" nil))
         (avdTarget (read-string (android-string-avd) nil nil "1" nil)))
-    (shell (concat "*android-temp*"))
+    (android-temp-buffer)
     (comint-send-string (current-buffer)
                         (format "%s create avd -n %s -t %s \n"
                                 (android-string-android)
@@ -205,6 +209,8 @@
 (defun android-start-log () 
   "Open shell to show android log"
   (interactive)
+  (if (not (eq nil (get-buffer "*android-log*")))
+      (kill-buffer "*android-log*"))
   (shell "*android-log*")
   (if (eq system-type 'windows-nt)
       (win-android-start-log)
@@ -282,7 +288,7 @@
   "Build and run project with android ndk"
   (interactive "*p")
   (setq ndk-proPath (buffer-file-name))
-  (shell "*android-build*")
+  (android-build-buffer)
   (if (eq system-type 'windows-nt)
       (win-androidndk-build)
     (lin-androidndk-build))
@@ -307,7 +313,7 @@
   "Rebuild and run project with android ndk"
   (interactive "*p")
   (setq ndk-proPath (buffer-file-name))
-  (shell "*android-build*")
+  (android-build-buffer)
   (if (eq system-type 'windows-nt)
       (win-androidndk-rebuild)
     (lin-androidndk-rebuild))
@@ -334,7 +340,7 @@
   "Build ndk project and install apk in sdk-project-path"
   (interactive "*p")
   (setq ndk-proPath (buffer-file-name))
-  (shell "*android-build*")
+  (android-build-buffer)
   (if (eq system-type 'windows-nt)
       (win-androidsdk-build)
     (lin-androidsdk-build))
@@ -361,7 +367,7 @@
   "Rebuild ndk project and install apk in sdk-project-path"
   (interactive "*p")
   (setq ndk-proPath (buffer-file-name))
-  (shell "*android-build*")
+  (android-build-buffer)
   (if (eq system-type 'windows-nt)
       (win-androidsdk-rebuild)
     (lin-androidsdk-rebuild))

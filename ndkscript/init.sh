@@ -17,5 +17,5 @@ else
     export ANDROID_SDK=$3
 
     # add some path to PATH
-    export PATH=$NDKSCRIPTPATH:$NDK:$ANDROID_SDK/tools:$ANDROID_SDK/platform-tools:$PATH
+    export PATH=$NDKSCRIPTPATH:$NDK:$ANDROID_SDK/tools:$ANDROID_SDK/platform-tools:$NDK/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin:$PATH
 fi
