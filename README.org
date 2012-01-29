@@ -1,0 +1,171 @@
+#+STARTUP: indent    
+#+OPTIONS: H:4
+#+AUTHOR: Zxy
+#+EMAIL: gcoordinate@gmail.com
+#+TITLE: Readme for android-emacs-toolkit
+* WHATE IS ANDROID-EMACS-TOOLKIT FOR
+This toolkit contains a emacs major mode which help to develop
+android sdk and ndk program with emacs.
+
+It often causes a lot of inconvenience to compile android NDK
+program with shell. We have to set some environment variables
+and have no shortcuts.
+
+Android-emacs-toolkit helps to build android development
+environment on emacs. It provides support for *create new
+project*, *build Android sdk project with ant*, *build Android
+ndk project with ndk-build*, *run executable ndk project on
+emulator*, *install and uninstall apk*, *output emulator log on
+emacs*.
+
+This toolkit tested on WindowsXP/7, Ubuntu11 with android-sdk-4
+and android-ndk-r7.
+
+* FOLDER STRUCTURE
+
+| Folder name        | Description                                                    |
+|--------------------+----------------------------------------------------------------|
+| ndkscript          | Shell script for toolkit                                       |
+| --\ _adbt.sh       | Shell script for text executable program on emulator           |
+| --\ adr.sh         | Shell script to install and run executable program on emulator |
+| --\ api.sh         | Shell script to install apk on emulator                        |
+| --\ apu.sh         | Shell script to uninstall apk on emulator                      |
+| --\ init.sh        | Shell script to set environment variables for current shell    |
+| --\ lgs.sh         | Shell script to clean and start log of emulator                |
+| --\ mhp.sh         | Shell script for help                                          |
+| --\ ndbr.sh        | Shell script to build or rebuild program with NDK              |
+| jni_template       | Template folder for ndk project                                |
+| --\ Android.mk     | Makefile for ndk project                                       |
+| --\ Application.mk | Setting for ndk project                                        |
+| --\ hello-jni.c    | Code for lib                                                   |
+| --\ helloworld.cpp | Code for executable                                             |
+| androidmk-mode.el  | Emacs script for toolkit                                       |
+| README.org         | Readme                                                         |
+| ChangeLog          | Change log                                                     |
+| LICENSE            | License                                                        |
+| AUTHORS            | Authors                                                        |
+
+* USAGE
+
+** For Windows users
+
+1. Install [[http://cygwin.com/install.html][cygwin]]
+
+2. Install [[http://developer.android.com/sdk/index.html][android-sdk-windows]]
+
+3. Install [[http://developer.android.com/sdk/ndk/index.html][android-ndk-windows]]
+
+4. Install [[http://www.eclipse.org/downloads/][eclipse]]
+
+5. Install [[http://developer.android.com/sdk/eclipse-adt.html#installing][ADT Plugin]]
+
+6. Install [[http://www.gnu.org/software/emacs/][emacs]]
+
+7. Set up cygwin for emacs
+
+8. Copy androidmk-mode.el and ndkscript to emasc-23.3/site-lisp/
+
+9. Add the following codes to .emacs
+
+   #+begin_src emacs-lisp
+;; If windows user, do not set ndk-script-path with '~/'
+(setq ndk-script-path "D:/home/emacs-23.3/site-lisp/ndkscript")
+(setq ndk-root-path "/cygdrive/c/android-ndk-r5c")
+(setq sdk-root-path "/cygdrive/c/android-sdk-windows")
+(setq ndk-project-name "myTest")
+
+;; If you will use androidsdk-build, please set sdk information
+;; And please selected 'Refresh automatically' in eclipse->window->preference->general->workspace 
+(setq sdk-project-path "d:/home/workspace/test01")
+(setq sdk-project-package "com.example.test")
+
+(require 'androidmk-mode)
+
+(global-set-key [M-f3] 'android-start-log)
+(global-set-key [M-f4] 'android-open-dir)
+
+(add-hook 'androidmk-mode-hook
+          (lambda ()
+            (progn (local-set-key [M-f5] 'androidndk-build)
+                   (local-set-key [M-S-f5] 'androidndk-rebuild)
+                   (local-set-key [C-f5] 'androidsdk-build)
+                   (local-set-key [C-S-f5] 'androidsdk-rebuild)
+                   )))
+   #+end_src
+
+10. [[*RUNNING%20EXAMPLES][RUNNING EXAMPLES]]
+
+** For Ubuntu users
+
+1. Install [[http://developer.android.com/sdk/index.html][android-sdk-linux]]
+
+2. Install [[http://developer.android.com/sdk/ndk/index.html][android-ndk-linux]]
+
+3. Install [[http://www.eclipse.org/downloads/][eclipse]] (sudo apt-get install eclipse)
+
+4. Install [[http://developer.android.com/sdk/eclipse-adt.html#installing][ADT Plugin]]
+
+5. Install [[http://www.gnu.org/software/emacs/][emacs]] (sudo apt-get install emacs)
+
+6. Copy androidmk-mode.el and ndkscript to /usr/share/emasc/site-lisp/
+
+7. Add the following codes to .emacs
+   #+begin_src emacs-lisp
+;; If ubuntu user, do not use '~/' to instead of '/home/zx/'
+(setq ndk-script-path "/usr/share/emacs/site-lisp/ndkscript")
+(setq ndk-root-path "/home/zx/android-ndk-r5c")
+(setq sdk-root-path "/home/zx/android-sdk-linux_x86")
+(setq ndk-project-name "myTest")
+
+;; If you will use androidsdk-build, please set sdk information
+;; And please selected 'Refresh automatically' in eclipse->window->preference->general->workspace 
+(setq sdk-project-path "/home/zx/workspace/test01")
+(setq sdk-project-package "com.example.test")
+
+(require 'androidmk-mode)
+
+(global-set-key [M-f3] 'android-start-log)
+(global-set-key [M-f4] 'android-open-dir)
+
+
+(add-hook 'androidmk-mode-hook
+          (lambda ()
+            (progn (local-set-key [M-f5] 'androidndk-build)
+                   (local-set-key [M-S-f5] 'androidndk-rebuild)
+                   (local-set-key [C-f5] 'androidsdk-build)
+                   (local-set-key [C-S-f5] 'androidsdk-rebuild)
+                   )))
+   #+end_src
+
+8. [[*RUNNING%20EXAMPLES][RUNNING EXAMPLES]]
+
+* RUNNING EXAMPLES
+
+1. Follow usage
+
+2. Launch android emulator
+
+3. Open android-emacs-toolkit/examples/test01/jni/Android.mk with emacs
+
+4. M-x android-start-log
+
+5. M-x androidndk-build
+
+6. It will show helloworld in *android-log*
+   
+   [[file:preview.gif][preview.gif]]
+
+* MORE INFORMATION
+
+You can find more information at the project website
+
+http://code.google.com/p/android-emacs-toolkit/
+
+* LICENSE
+
+This toolkit is licensed under the GPL v3.
+
+* AUTHOR'S WORDS 
+If you find a bug, please post at [[https://code.google.com/p/appengine-emacs-toolkit/issues/list][Issues]]. If you have not find a
+bug and feel this project helpful, please star it. Every star can
+make me know what I do can help other people and drove me forward.
