@@ -30,14 +30,23 @@
 
 (message (concat "Loading " load-file-name))
 
-;; public var
+;; private var
+(defvar toolkit-path
+  (file-name-directory (or load-file-name buffer-file-name))
+  "*Android emacs toolkit path")
+
+;; (defvar ndk-script-path
+;;   (if (eq system-type 'windows-nt)
+;;       (concat "/cygdrive/"(replace-regexp-in-string ":" "" toolkit-path)"ndkscript")
+;;     (concat toolkit-path"ndkscript"))
+;;   "*Script for android ndk")
+
 (defvar ndk-script-path
-  (concat(file-name-directory (or load-file-name buffer-file-name))"ndkscript")
+  (concat toolkit-path"ndkscript")
   "*Script for android ndk")
-;;(message ndk-script-path)
 
 (defvar ndk-template-directory
-  (concat(file-name-directory (or load-file-name buffer-file-name))"jni_template")
+  (concat toolkit-path"jni_template")
   "*Project template for android ndk")
 
 ;; ==================================================================
@@ -74,7 +83,7 @@
       (setq offset (match-end 0)))
     (if result
         (reverse result)
-      (error "no Android Virtual Devices found"))))
+      (error "[android] no Android Virtual Devices found"))))
 
 (defun android-list-avd ()
   (let* ((command (concat (android-string-android)" list avds"))
@@ -86,7 +95,7 @@
       (setq offset (match-end 0)))
     (if result
         (reverse result)
-      (error "no Android Virtual Devices found"))))
+      (error "[android] no Android Virtual Devices found"))))
 
 (defun android-string-avd ()
   (setq result (android-list-target))
@@ -97,6 +106,46 @@
           (concat tmpreadstring(nth tmpnum result)"; "))
     (setq tmpnum (+ tmpnum 1)))
   (concat tmpreadstring"): "))
+
+(defun android-project-path ()
+  "get sdk project path"
+  (if (equal nil buffer-file-name)
+      (error "[android] buffer-file-name is nil!"))
+  (setq tmpprojectpath (file-name-directory (or load-file-name buffer-file-name)))
+  (if (file-exists-p (concat tmpprojectpath "build.xml"))
+      (concat tmpprojectpath)
+    (progn
+      (setq tmpprojectpath (replace-regexp-in-string "/jni.*" "" tmpprojectpath))
+      (if (file-exists-p (concat tmpprojectpath "/build.xml"))
+          (concat tmpprojectpath)
+        (progn
+          (setq tmpprojectpath (replace-regexp-in-string "/src.*" "" tmpprojectpath))
+          (if (file-exists-p (concat tmpprojectpath "/build.xml"))
+              (concat tmpprojectpath)
+            (error "[android] %s isn't in android project!" buffer-file-name)
+            ))
+        ))
+    ))
+
+(defun android-project-package ()
+  "get sdk project package"
+  (if (equal nil buffer-file-name)
+      (error "[android] buffer-file-name is nil!"))
+  (setq tmpprojectpath (file-name-directory (or load-file-name buffer-file-name)))
+  (if (file-exists-p (concat tmpprojectpath "build.xml"))
+      (concat tmpprojectpath)
+    (progn
+      (setq tmpprojectpath (replace-regexp-in-string "/jni.*" "" tmpprojectpath))
+      (if (file-exists-p (concat tmpprojectpath "/build.xml"))
+          (concat tmpprojectpath)
+        (progn
+          (setq tmpprojectpath (replace-regexp-in-string "/src.*" "" tmpprojectpath))
+          (if (file-exists-p (concat tmpprojectpath "/build.xml"))
+              (concat tmpprojectpath)
+            (error "[android] %s isn't in android project!" buffer-file-name)
+            ))
+        ))
+    ))
 
 ;; ==================================================================
 
@@ -220,7 +269,7 @@
 
 ;; ==================================================================
 
-(defun* android-new-project ()
+(defun android-new-project ()
   "Create new project"
   (interactive)
   (if (equal nil buffer-file-name)
@@ -238,27 +287,27 @@
   (let ((projectpath (read-string "[android] Project path: "
                                   tmpprojectpath nil tmpprojectpath nil))
         (projectname (read-string "[android] Project name (default androidproject): "
-                                  nil nil "androidproject" nil))
-        (targetid (read-string tmpreadstring nil nil "1" nil))
-        (package (read-string "[android] Package name (default org.example): "
-                              nil nil "org.example" nil))
-        (activity (read-string "[android] Activity name (default TestActivity): "
-                              nil nil "TestActivity" nil)))
+                                  nil nil "androidproject" nil)))
     (setq projectpath (concat projectpath"/"projectname))
-    (message "[android] Building android project at %s." projectpath)
     (if (and (file-exists-p projectpath) (file-exists-p (concat projectpath"/build.xml")))
-        (error "Project exist!"))
-    (when (or (not (file-exists-p projectpath))
-            (and (file-exists-p projectpath)
-                 (y-or-n-p (format "[android] Folder %s exist! Overwrit?" projectpath))))
-      (when (y-or-n-p "[android] New ndk folder?")
-        (unless (file-exists-p projectpath)
-          (dired-create-directory projectpath))
-        (copy-directory ndk-template-directory (concat projectpath"/jni"))
-        (find-file (concat projectpath"/jni/android.mk"))
-        (beginning-of-buffer))
-      (android-temp-buffer)
-      (comint-send-string (current-buffer)
+        (error "[android] Project exist!"))
+    (let ((targetid (read-string tmpreadstring nil nil "1" nil))
+          (package (read-string "[android] Package name (default org.example.test): "
+                                nil nil "org.example.test" nil))
+          (activity (read-string "[android] Activity name (default TestActivity): "
+                                 nil nil "TestActivity" nil)))
+      (message "[android] Building android project at %s." projectpath)
+      (when (or (not (file-exists-p projectpath))
+                (and (file-exists-p projectpath)
+                     (y-or-n-p (format "[android] Folder %s exist! Overwrit?" projectpath))))
+        (when (y-or-n-p "[android] New ndk folder?")
+          (unless (file-exists-p projectpath)
+            (dired-create-directory projectpath))
+          (copy-directory ndk-template-directory (concat projectpath"/jni"))
+          (find-file (concat projectpath"/jni/android.mk"))
+          (beginning-of-buffer))
+        (android-temp-buffer)
+        (comint-send-string (current-buffer)
                           (format "%s create project -n %s -t %s -p %s -k %s -a %s \n"
                                   (android-string-android)
                                   projectname
@@ -268,7 +317,7 @@
                                   activity))
       (end-of-buffer)
       (other-window -1)
-      )))
+      ))))
 
 ;; ==================================================================
 
@@ -284,10 +333,11 @@
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/ndbr.sh \n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/adr.sh '"ndk-project-name"' '"(replace-regexp-in-string "/jni/Android.mk" "" ndk-proPath)"'\n")))
 
-(defun androidndk-build (proName)
+(defun androidndk-build ()
   "Build and run project with android ndk"
-  (interactive "*p")
+  (interactive)
   (setq ndk-proPath (buffer-file-name))
+  ;;(setq sdk-project-path (android-project-path))
   (android-build-buffer)
   (if (eq system-type 'windows-nt)
       (win-androidndk-build)
@@ -309,9 +359,9 @@
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/ndbr.sh r\n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/adr.sh '"ndk-project-name"' '"(replace-regexp-in-string "/jni/Android.mk" "" ndk-proPath)"'\n")))
 
-(defun androidndk-rebuild (proName)
+(defun androidndk-rebuild ()
   "Rebuild and run project with android ndk"
-  (interactive "*p")
+  (interactive)
   (setq ndk-proPath (buffer-file-name))
   (android-build-buffer)
   (if (eq system-type 'windows-nt)
@@ -325,6 +375,8 @@
 (defun win-androidsdk-build ()
   "androidsdk-build for windows"
   (comint-send-string (current-buffer) (concat ". "ndk-script-path"/init.sh '"ndk-script-path"' '"ndk-root-path"' '"sdk-root-path"' \n"))
+  (comint-send-string (current-buffer) (concat (android-string-android)" update project --target 1 --path '"sdk-project-path"' \n"))
+  (comint-send-string (current-buffer) (concat "ant -buildfile '"sdk-project-path"build.xml' ""release"" \n"))
   (comint-send-string (current-buffer) (concat "ndbr.sh b '"sdk-project-path"'\n"))
   (comint-send-string (current-buffer) (concat "apu.sh '"sdk-project-package"'\n"))
   (comint-send-string (current-buffer) (concat "api.sh '"sdk-project-path"/bin'\n")))
@@ -332,14 +384,16 @@
 (defun lin-androidsdk-build ()
   "androidsdk-build for linux"
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/init.sh '"ndk-script-path"' '"ndk-root-path"' '"sdk-root-path"' \n"))
+  (comint-send-string (current-buffer) (concat (android-string-android)" update project --target 1 --path '"sdk-project-path"' \n"))
+  (comint-send-string (current-buffer) (concat "ant -buildfile '"sdk-project-path"build.xml' ""release"" \n"))
   (comint-send-string (current-buffer) (concat "source ndbr.sh b '"sdk-project-path"'\n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/apu.sh '"sdk-project-package"'\n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/api.sh '"sdk-project-path"/bin'\n")))
 
-(defun androidsdk-build (proName)
+(defun androidsdk-build ()
   "Build ndk project and install apk in sdk-project-path"
-  (interactive "*p")
-  (setq ndk-proPath (buffer-file-name))
+  (interactive)
+  (setq sdk-project-path (android-project-path))
   (android-build-buffer)
   (if (eq system-type 'windows-nt)
       (win-androidsdk-build)
@@ -352,6 +406,9 @@
 (defun win-androidsdk-rebuild ()
   "androidsdk-rebuild for windows"
   (comint-send-string (current-buffer) (concat ". "ndk-script-path"/init.sh '"ndk-script-path"' '"ndk-root-path"' '"sdk-root-path"' \n"))
+  (comint-send-string (current-buffer) (concat (android-string-android)" update project --target 1 --path '"sdk-project-path"' \n"))
+  (comint-send-string (current-buffer) (concat "ant -buildfile '"sdk-project-path"build.xml' ""clean"" \n"))
+  (comint-send-string (current-buffer) (concat "ant -buildfile '"sdk-project-path"build.xml' ""release"" \n"))
   (comint-send-string (current-buffer) (concat "ndbr.sh r '"sdk-project-path"'\n"))
   (comint-send-string (current-buffer) (concat "apu.sh '"sdk-project-package"'\n"))
   (comint-send-string (current-buffer) (concat "api.sh '"sdk-project-path"/bin'\n")))
@@ -359,14 +416,17 @@
 (defun lin-androidsdk-rebuild ()
   "androidsdk-rebuild for linux"
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/init.sh '"ndk-script-path"' '"ndk-root-path"' '"sdk-root-path"' \n"))
+  (comint-send-string (current-buffer) (concat (android-string-android)" update project --target 1 --path '"sdk-project-path"' \n"))
+  (comint-send-string (current-buffer) (concat "ant -buildfile '"sdk-project-path"build.xml' ""clean"" \n"))
+  (comint-send-string (current-buffer) (concat "ant -buildfile '"sdk-project-path"build.xml' ""release"" \n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/ndbr.sh r '"sdk-project-path"'\n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/apu.sh '"sdk-project-package"'\n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/api.sh '"sdk-project-path"/bin'\n")))
 
-(defun androidsdk-rebuild (proName)
+(defun androidsdk-rebuild ()
   "Rebuild ndk project and install apk in sdk-project-path"
-  (interactive "*p")
-  (setq ndk-proPath (buffer-file-name))
+  (interactive)
+  (setq sdk-project-path (android-project-path))
   (android-build-buffer)
   (if (eq system-type 'windows-nt)
       (win-androidsdk-rebuild)

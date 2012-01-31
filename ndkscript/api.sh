@@ -4,6 +4,7 @@
 if [ "$#" != "1" ]; then
     echo "Usage: api.sh input" 
 else
+    
     for file in ` ls $1 `
     do
         TMPFILE=$1'/'$file

@@ -13,7 +13,7 @@ else
     if [ "$NDKSCRIPTPATH" == "" ]; then
         baseDirForScriptSelf=$(cd "$(dirname "$0")"; pwd) 
         #echo "full path to currently executed script is : ${baseDirForScriptSelf}"
-        if [ ${baseDirForScriptSelf:0:10} == "/cygdrive/" ]; then
+        if [ "${baseDirForScriptSelf:0:10}" == "/cygdrive/" ]; then
             baseDirForScriptSelf=${baseDirForScriptSelf/'/cygdrive/'/''}
             NDKSCRIPTPATH=${baseDirForScriptSelf:0:1}':'${baseDirForScriptSelf:1}
         else
