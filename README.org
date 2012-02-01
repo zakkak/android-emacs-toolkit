@@ -4,22 +4,18 @@
 #+EMAIL: gcoordinate@gmail.com
 #+TITLE: Readme for android-emacs-toolkit
 * WHATE IS ANDROID-EMACS-TOOLKIT FOR
-This toolkit contains a emacs major mode which help to develop
-android sdk and ndk program with emacs.
-
-It often causes a lot of inconvenience to compile android NDK
-program with shell. We have to set some environment variables
-and have no shortcuts.
-
 Android-emacs-toolkit helps to build android development
-environment on emacs. It provides support for *create new
-project*, *build Android sdk project with ant*, *build Android
-ndk project with ndk-build*, *run executable ndk project on
-emulator*, *install and uninstall apk*, *output emulator log on
+environment on emacs. It contains a emacs major mode which help
+to develop android sdk and ndk program.
+
+It provides support for *create new avd*, *launch avd*, *create
+new android project*, *build and rebuild Android sdk project*,
+*build and rebuild Android ndk project*, *install and uninstall
+apk*, *run executable ndk project*, *output emulator log on
 emacs*.
 
-This toolkit tested on WindowsXP/7, Ubuntu11 with android-sdk-4
-and android-ndk-r7.
+This toolkit tested on WindowsXP/7, Ubuntu11 with android-sdk and
+android-ndk-r7.
 
 * FOLDER STRUCTURE
 
@@ -48,42 +44,52 @@ and android-ndk-r7.
 * USAGE
 
 ** For Windows users
+1. Install [[http://www.gnu.org/software/emacs/][emacs]].
 
-1. Install [[http://cygwin.com/install.html][cygwin]]
+2. Install [[http://developer.android.com/sdk/index.html][android-sdk-windows]].
 
-2. Install [[http://developer.android.com/sdk/index.html][android-sdk-windows]]
+3. Install [[http://developer.android.com/sdk/ndk/index.html][android-ndk-windows]].
 
-3. Install [[http://developer.android.com/sdk/ndk/index.html][android-ndk-windows]]
+4. Install [[http://ant.apache.org/bindownload.cgi][ant]].
 
-4. Install [[http://www.eclipse.org/downloads/][eclipse]]
-
-5. Install [[http://developer.android.com/sdk/eclipse-adt.html#installing][ADT Plugin]]
-
-6. Install [[http://www.gnu.org/software/emacs/][emacs]]
-
-7. Set up cygwin for emacs
-
-8. Copy androidmk-mode.el and ndkscript to emasc-23.3/site-lisp/
-
-9. Add the following codes to .emacs
-
+5. Add ant bin folder to PATH.
    #+begin_src emacs-lisp
-;; If windows user, do not set ndk-script-path with '~/'
-(setq ndk-script-path "D:/home/emacs-23.3/site-lisp/ndkscript")
-(setq ndk-root-path "/cygdrive/c/android-ndk-r5c")
-(setq sdk-root-path "/cygdrive/c/android-sdk-windows")
-(setq ndk-project-name "myTest")
+(setenv "PATH" (concat "c:/apache-ant-1.8.2/bin/;" (getenv "PATH")))
+   #+end_src
 
-;; If you will use androidsdk-build, please set sdk information
-;; And please selected 'Refresh automatically' in eclipse->window->preference->general->workspace 
-(setq sdk-project-path "d:/home/workspace/test01")
-(setq sdk-project-package "com.example.test")
+6. Install [[http://cygwin.com/install.html][cygwin]].
 
+7. Set up cygwin for emacs.
+   #+begin_src emacs-lisp
+(when (eq system-type 'windows-nt)
+  (require 'cygwin-mount)
+  (cygwin-mount-activate)
+  (add-hook 'comint-output-filter-functions
+            'shell-strip-ctrl-m nil t)
+  (add-hook 'comint-output-filter-functions
+            'comint-watch-for-password-prompt nil t)
+  (setq explicit-shell-file-name "bash.exe")
+  ;; For subprocesses invoked via the shell
+  ;; (e.g., "shell -c command")
+  (setq shell-file-name explicit-shell-file-name))
+   #+end_src
+
+8. Set some defvar.
+   #+begin_src emacs-lisp
+;; Do not use '\' instead '/'
+(if (eq system-type 'windows-nt)
+    (progn (setq android-ndk-root-path "e:/zxy/home/program/android-ndk-r7-windows")
+           (setq android-sdk-root-path "e:/zxy/home/program/android-sdk-windows"))
+  ;; Ubuntu do not understanding '~' instead of 'home'
+  (progn (setq android-ndk-root-path "/home/share/program/android-ndk-r7-linux")
+         (setq android-sdk-root-pathp "/home/share/program/android-sdk-linux")))
+(setq android-default-package "com.zxy")
+   #+end_src
+
+9. Add android-emacs-toolkit to emacs.
+   #+begin_src emacs-lisp
+(add-to-list 'load-path "c:/android-emacs-toolkit")
 (require 'androidmk-mode)
-
-(global-set-key [M-f3] 'android-start-log)
-(global-set-key [M-f4] 'android-open-dir)
-
 (add-hook 'androidmk-mode-hook
           (lambda ()
             (progn (local-set-key [M-f5] 'androidndk-build)
@@ -96,38 +102,30 @@ and android-ndk-r7.
 10. [[*RUNNING%20EXAMPLES][RUNNING EXAMPLES]]
 
 ** For Ubuntu users
+1. Install [[http://www.gnu.org/software/emacs/][emacs]] (sudo apt-get install emacs).
 
-1. Install [[http://developer.android.com/sdk/index.html][android-sdk-linux]]
+2. Install [[http://developer.android.com/sdk/index.html][android-sdk-linux]].
 
-2. Install [[http://developer.android.com/sdk/ndk/index.html][android-ndk-linux]]
+3. Install [[http://developer.android.com/sdk/ndk/index.html][android-ndk-linux]].
 
-3. Install [[http://www.eclipse.org/downloads/][eclipse]] (sudo apt-get install eclipse)
+4. Install [[http://ant.apache.org/bindownload.cgi][ant]].
 
-4. Install [[http://developer.android.com/sdk/eclipse-adt.html#installing][ADT Plugin]]
-
-5. Install [[http://www.gnu.org/software/emacs/][emacs]] (sudo apt-get install emacs)
-
-6. Copy androidmk-mode.el and ndkscript to /usr/share/emasc/site-lisp/
-
-7. Add the following codes to .emacs
+5. Set some defvar.
    #+begin_src emacs-lisp
-;; If ubuntu user, do not use '~/' to instead of '/home/zx/'
-(setq ndk-script-path "/usr/share/emacs/site-lisp/ndkscript")
-(setq ndk-root-path "/home/zx/android-ndk-r5c")
-(setq sdk-root-path "/home/zx/android-sdk-linux_x86")
-(setq ndk-project-name "myTest")
+;; Do not use '\' instead '/'
+(if (eq system-type 'windows-nt)
+    (progn (setq android-ndk-root-path "e:/zxy/home/program/android-ndk-r7-windows")
+           (setq android-sdk-root-path "e:/zxy/home/program/android-sdk-windows"))
+  ;; Ubuntu do not understanding '~' instead of 'home'
+  (progn (setq android-ndk-root-path "/home/share/program/android-ndk-r7-linux")
+         (setq android-sdk-root-pathp "/home/share/program/android-sdk-linux")))
+(setq android-default-package "com.zxy")
+   #+end_src
 
-;; If you will use androidsdk-build, please set sdk information
-;; And please selected 'Refresh automatically' in eclipse->window->preference->general->workspace 
-(setq sdk-project-path "/home/zx/workspace/test01")
-(setq sdk-project-package "com.example.test")
-
+6. Add android-emacs-toolkit to emacs.
+   #+begin_src emacs-lisp
+(add-to-list 'load-path "c:/android-emacs-toolkit")
 (require 'androidmk-mode)
-
-(global-set-key [M-f3] 'android-start-log)
-(global-set-key [M-f4] 'android-open-dir)
-
-
 (add-hook 'androidmk-mode-hook
           (lambda ()
             (progn (local-set-key [M-f5] 'androidndk-build)
@@ -137,23 +135,49 @@ and android-ndk-r7.
                    )))
    #+end_src
 
-8. [[*RUNNING%20EXAMPLES][RUNNING EXAMPLES]]
+7. [[*RUNNING%20EXAMPLES][RUNNING EXAMPLES]]
 
 * RUNNING EXAMPLES
+1. Follow usage.
 
-1. Follow usage
+2. Create new android avd.
+   #+begin_src emacs-lisp
+   M-x android-create-avd
+   #+end_src
+   Input avd name.
 
-2. Launch android emulator
+3. Launch android avd.
+   #+begin_src emacs-lisp
+   M-x android-launch-avd
+   #+end_src
+   Input avd name.
 
-3. Open android-emacs-toolkit/examples/test01/jni/Android.mk with emacs
+4. Output log.
+   #+BEGIN_SRC emacs-lisp
+   M-x android-start-log
+   #+END_SRC
 
-4. M-x android-start-log
+5. Create new android project.
+   #+BEGIN_SRC emacs-lisp
+   M-x android-new-project
+   #+END_SRC
+   Input project path, project name, project target, project
+   pachage, project activity and whether create jni folder. Then
+   java file is open.
 
-5. M-x androidndk-build
+6. Build project with ant and install.
+   #+BEGIN_SRC emacs-lisp
+   M-x androidsdk-build
+   #+END_SRC
+   Hello world will print on emulator.
 
-6. It will show helloworld in *android-log*
+7. Build ndk project with ndk-build and run.
+   #+BEGIN_SRC emacs-lisp
+   M-x androidndk-build
+   #+END_SRC
+   Hello world will print on *android-log* buffer.
    
-   [[file:preview.gif][preview.gif]]
+[[file:preview.gif][preview.gif]]
 
 * MORE INFORMATION
 
