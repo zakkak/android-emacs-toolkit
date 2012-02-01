@@ -31,7 +31,7 @@
 (message (concat "Loading " load-file-name))
 
 ;; public var
-(defvar android-default-package "org.example"
+(defvar android-default-package "com.package"
   "*Android new project default package")
 
 ;; private var
@@ -78,6 +78,7 @@
     (concat "'"sdk-root-path"/tools/emulator'")))
 
 (defun android-list-target ()
+  (message "[android] List android target...")
   (let* ((command (concat (android-string-android)" list targets"))
          (output (shell-command-to-string command))
          (result nil)
@@ -90,6 +91,7 @@
       (error "[android] no Android Virtual Devices found"))))
 
 (defun android-list-avd ()
+  (message "[android] List android avd...")
   (let* ((command (concat (android-string-android)" list avds"))
          (output (shell-command-to-string command))
          (result nil)
@@ -161,6 +163,15 @@
         (match-string 1 output)
       (error "[android] Cannot parse project package"))))
 
+(defun android-parse-activity ()
+  "Parse activity name." 
+  (let ((output (android-string-from-file (concat (android-project-path)"/AndroidManifest.xml")))
+        (result nil)
+        (offset 0))
+    (if (string-match "<activity android:name=\"\\(.*\\)\"" output offset)
+        (match-string 1 output)
+      (error "[android] Cannot parse project activity"))))
+
 ;; ==================================================================
 
 (defun lin-init-command ()
@@ -217,7 +228,7 @@
   "list all targets on android"
   (interactive)
   (android-temp-buffer)
-  (comint-send-string (current-buffer) (concat "echo '[android] Listing targets...' \n"))
+  (comint-send-string (current-buffer) (concat "echo '[android] List targets...' \n"))
   (comint-send-string (current-buffer) (concat (android-string-android)" list targets \n"))
   (end-of-buffer)
   (other-window -1))
@@ -226,7 +237,7 @@
   "list all avds on android"
   (interactive)
   (android-temp-buffer)
-  (comint-send-string (current-buffer) (concat "echo '[android] Listing avd...' \n"))
+  (comint-send-string (current-buffer) (concat "echo '[android] List avd...' \n"))
   (comint-send-string (current-buffer) (concat (android-string-android)" list avd \n"))
   (end-of-buffer)
   (other-window -1))
@@ -236,12 +247,17 @@
 (defun android-launch-avd ()
   "launch avd with name"
   (interactive)
-  ;; start avd
-  (let ((avdName (completing-read "[android] Virtual Device Name: " (android-list-avd))))
-    (shell (concat "*android-avd-"avdName"*"))
+  (let ((avdName (completing-read "[android] Virtual Device Name(Key 'up' to chose): " (android-list-avd))))
+    ;; (call-process (android-string-emulator) nil t nil (concat " -avd "avdName"\n"))
+    ;; (shell-command (concat (android-string-emulator)" -avd "avdName"\n"))
+    ;; (message (shell-command-to-string (concat (android-string-emulator)" -avd "avdName"\n")))
+    (setq bufname (concat "*android-temp-"avdName"*"))
+    (if (not (eq nil (get-buffer bufname)))
+        (error "[android] %s has been launched." avdName))
+    (shell bufname)
     (comint-send-string (current-buffer) (concat (android-string-emulator)" -avd "avdName"\n"))
     (end-of-buffer)
-    (other-window -1)))
+    (delete-window)))
 
 (defun android-create-avd ()
   "Create avd with name"
@@ -394,7 +410,7 @@
   (comint-send-string (current-buffer) (concat "ant -buildfile '"sdk-project-path"/build.xml' ""debug"" \n"))
   (comint-send-string (current-buffer) (concat "ndbr.sh b '"sdk-project-path"'\n"))
   (comint-send-string (current-buffer) (concat "apu.sh '"sdk-package-name"'\n"))
-  (comint-send-string (current-buffer) (concat "api.sh '"sdk-project-path"/bin'\n")))
+  (comint-send-string (current-buffer) (concat "api.sh '"sdk-project-path"/bin' '"sdk-package-name"' '"sdk-activity-name"'\n")))
 
 (defun lin-androidsdk-build ()
   "androidsdk-build for linux"
@@ -403,13 +419,14 @@
   (comint-send-string (current-buffer) (concat "ant -buildfile '"sdk-project-path"/build.xml' ""debug"" \n"))
   (comint-send-string (current-buffer) (concat "source ndbr.sh b '"sdk-project-path"'\n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/apu.sh '"sdk-package-name"'\n"))
-  (comint-send-string (current-buffer) (concat "source "ndk-script-path"/api.sh '"sdk-project-path"/bin'\n")))
+  (comint-send-string (current-buffer) (concat "source "ndk-script-path"/api.sh '"sdk-project-path"/bin' '"sdk-package-name"' '"sdk-activity-name"'\n")))
 
 (defun androidsdk-build ()
   "Build ndk project and install apk in sdk-project-path"
   (interactive)
   (setq sdk-project-path (android-project-path))
   (setq sdk-package-name (android-parse-package))
+  (setq sdk-activity-name (android-parse-activity))
   (android-build-buffer)
   (if (eq system-type 'windows-nt)
       (win-androidsdk-build)
@@ -427,7 +444,7 @@
   (comint-send-string (current-buffer) (concat "ant -buildfile '"sdk-project-path"/build.xml' ""debug"" \n"))
   (comint-send-string (current-buffer) (concat "ndbr.sh r '"sdk-project-path"'\n"))
   (comint-send-string (current-buffer) (concat "apu.sh '"sdk-package-name"'\n"))
-  (comint-send-string (current-buffer) (concat "api.sh '"sdk-project-path"/bin'\n")))
+  (comint-send-string (current-buffer) (concat "api.sh '"sdk-project-path"/bin' '"sdk-package-name"' '"sdk-activity-name"'\n")))
 
 (defun lin-androidsdk-rebuild ()
   "androidsdk-rebuild for linux"
@@ -437,13 +454,14 @@
   (comint-send-string (current-buffer) (concat "ant -buildfile '"sdk-project-path"/build.xml' ""debug"" \n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/ndbr.sh r '"sdk-project-path"'\n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/apu.sh '"sdk-package-name"'\n"))
-  (comint-send-string (current-buffer) (concat "source "ndk-script-path"/api.sh '"sdk-project-path"/bin'\n")))
+  (comint-send-string (current-buffer) (concat "source "ndk-script-path"/api.sh '"sdk-project-path"/bin' '"sdk-package-name"' '"sdk-activity-name"'\n")))
 
 (defun androidsdk-rebuild ()
   "Rebuild ndk project and install apk in sdk-project-path"
   (interactive)
   (setq sdk-project-path (android-project-path))
   (setq sdk-package-name (android-parse-package))
+  (setq sdk-activity-name (android-parse-activity))
   (android-build-buffer)
   (if (eq system-type 'windows-nt)
       (win-androidsdk-rebuild)
