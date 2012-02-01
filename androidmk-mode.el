@@ -359,18 +359,18 @@
   "androidndk-build for windows"
   (comint-send-string (current-buffer) (concat ". "ndk-script-path"/init.sh '"ndk-script-path"' '"android-ndk-root-path"' '"android-sdk-root-path"' \n"))
   (comint-send-string (current-buffer) (concat "ndbr.sh \n"))
-  (comint-send-string (current-buffer) (concat "adr.sh '"sdk-project-name"' '"(replace-regexp-in-string "/jni/Android.mk" "" ndk-proPath)"'\n")))
+  (comint-send-string (current-buffer) (concat "adr.sh '"sdk-project-name"' '"sdk-project-path"'\n")))
 
 (defun lin-androidndk-build ()
   "androidndk-build for linux"
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/init.sh '"ndk-script-path"' '"android-ndk-root-path"' '"android-sdk-root-path"' \n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/ndbr.sh \n"))
-  (comint-send-string (current-buffer) (concat "source "ndk-script-path"/adr.sh '"sdk-project-name"' '"(replace-regexp-in-string "/jni/Android.mk" "" ndk-proPath)"'\n")))
+  (comint-send-string (current-buffer) (concat "source "ndk-script-path"/adr.sh '"sdk-project-name"' '"sdk-project-path"'\n")))
 
 (defun androidndk-build ()
   "Build and run project with android ndk"
   (interactive)
-  (setq ndk-proPath (buffer-file-name))
+  (setq sdk-project-path (android-project-path))
   (setq sdk-project-name (android-parse-name))
   (android-build-buffer)
   (if (eq system-type 'windows-nt)
@@ -385,18 +385,18 @@
   "androidndk-rebuild for windows"
   (comint-send-string (current-buffer) (concat ". "ndk-script-path"/init.sh '"ndk-script-path"' '"android-ndk-root-path"' '"android-sdk-root-path"' \n"))
   (comint-send-string (current-buffer) (concat "ndbr.sh r\n"))
-  (comint-send-string (current-buffer) (concat "adr.sh '"sdk-project-name"' '"(replace-regexp-in-string "/jni/Android.mk" "" ndk-proPath)"'\n")))
+  (comint-send-string (current-buffer) (concat "adr.sh '"sdk-project-name"' '"sdk-project-path"'\n")))
 
 (defun lin-androidndk-rebuild ()
   "androidndk-rebuild for linux"
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/init.sh '"ndk-script-path"' '"android-ndk-root-path"' '"android-sdk-root-path"' \n"))
   (comint-send-string (current-buffer) (concat "source "ndk-script-path"/ndbr.sh r\n"))
-  (comint-send-string (current-buffer) (concat "source "ndk-script-path"/adr.sh '"sdk-project-name"' '"(replace-regexp-in-string "/jni/Android.mk" "" ndk-proPath)"'\n")))
+  (comint-send-string (current-buffer) (concat "source "ndk-script-path"/adr.sh '"sdk-project-name"' '"sdk-project-path"'\n")))
 
 (defun androidndk-rebuild ()
   "Rebuild and run project with android ndk"
   (interactive)
-  (setq ndk-proPath (buffer-file-name))
+  (setq sdk-project-path (android-project-path))
   (setq sdk-project-name (android-parse-name))
   (android-build-buffer)
   (if (eq system-type 'windows-nt)

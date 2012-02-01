@@ -82,7 +82,7 @@ android-ndk-r7.
            (setq android-sdk-root-path "e:/zxy/home/program/android-sdk-windows"))
   ;; Ubuntu do not understanding '~' instead of 'home'
   (progn (setq android-ndk-root-path "/home/share/program/android-ndk-r7-linux")
-         (setq android-sdk-root-pathp "/home/share/program/android-sdk-linux")))
+         (setq android-sdk-root-path "/home/share/program/android-sdk-linux")))
 (setq android-default-package "com.zxy")
    #+end_src
 
@@ -118,7 +118,7 @@ android-ndk-r7.
            (setq android-sdk-root-path "e:/zxy/home/program/android-sdk-windows"))
   ;; Ubuntu do not understanding '~' instead of 'home'
   (progn (setq android-ndk-root-path "/home/share/program/android-ndk-r7-linux")
-         (setq android-sdk-root-pathp "/home/share/program/android-sdk-linux")))
+         (setq android-sdk-root-path "/home/share/program/android-sdk-linux")))
 (setq android-default-package "com.zxy")
    #+end_src
 
