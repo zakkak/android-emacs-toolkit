@@ -187,8 +187,8 @@
   (comint-send-string (current-buffer) (concat "sudo chmod +x "ndk-script-path"/init.sh\n"))
   (comint-send-string (current-buffer) (concat "sudo chmod +x "ndk-script-path"/lgs.sh\n"))
   (comint-send-string (current-buffer) (concat "sudo chmod +x "ndk-script-path"/mhp.sh\n"))
-  (comint-send-string (current-buffer) (concat "sudo chmod +x "ndk-script-path"/ndbr.sh\n"))
-  (delete-window))
+  (comint-send-string (current-buffer) (concat "sudo chmod +x "ndk-script-path"/ndbr.sh\n")))
+  ;;(delete-window))
 
 (defun win-init-command ()
   "init shell command, you have to run once"
@@ -217,8 +217,8 @@
    (concat "dos2unix "ndk-script-path"/mhp.sh "ndk-script-path"/mhp.sh \n"))
   (comint-send-string
    (current-buffer)
-   (concat "dos2unix "ndk-script-path"/ndbr.sh "ndk-script-path"/ndbr.sh \n"))
-  (delete-window))
+   (concat "dos2unix "ndk-script-path"/ndbr.sh "ndk-script-path"/ndbr.sh \n")))
+  ;;(delete-window))
 
 (if (eq system-type 'windows-nt)
     (win-init-command)
